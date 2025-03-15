@@ -162,6 +162,7 @@ def send_to_telegram(image_path):
             asyncio.run(bot.send_photo(
                 chat_id=TELEGRAM_CHAT_ID,
                 photo=photo,
+                timeout=30,
                 caption=f"Captured at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
             ))
 
