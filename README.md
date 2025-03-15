@@ -29,29 +29,56 @@ A Python application for Raspberry Pi that captures images from a webcam, saves 
 
 1. Clone this repository to your Raspberry Pi:
    ```
-   git clone https://github.com/yourusername/blumencam.git
+   git clone https://github.com/tschuehly/blumencam.git
    cd blumencam
    ```
 
-2. Install the required dependencies:
+2. Set up a virtual environment (recommended):
    ```
-   pip3 install -r requirements.txt
+   # Install venv if not already installed
+   sudo apt-get update
+   sudo apt-get install python3-venv
+
+   # Create a virtual environment
+   python3 -m venv venv
+
+   # Activate the virtual environment
+   source venv/bin/activate
+   ```
+
+   Your command prompt should now show `(venv)` at the beginning, indicating that the virtual environment is active.
+
+3. Install the required dependencies in the virtual environment:
+   ```
+   pip install -r requirements.txt
    ```
 
    Or install packages individually:
    ```
-   pip3 install opencv-python python-telegram-bot
+   pip install opencv-python python-telegram-bot python-dotenv schedule
    ```
 
    Note: On Raspberry Pi, you might need to install OpenCV using:
    ```
+   # Deactivate the virtual environment first
+   deactivate
+
+   # Install system-level OpenCV
    sudo apt-get update
    sudo apt-get install python3-opencv
+
+   # Reactivate the virtual environment
+   source venv/bin/activate
    ```
 
-3. Make the script executable:
+4. Make the script executable:
    ```
    chmod +x blumencam.py
+   ```
+
+5. When you're done using the application, you can deactivate the virtual environment:
+   ```
+   deactivate
    ```
 
 ## Configuration
@@ -105,37 +132,44 @@ pip3 install python-dotenv
 
 ## Usage
 
-1. Set your Telegram bot token and chat ID:
+1. If you're using a virtual environment, make sure it's activated:
+   ```
+   source venv/bin/activate
+   ```
+
+   Your command prompt should show `(venv)` at the beginning.
+
+2. Set your Telegram bot token and chat ID:
    ```
    export TELEGRAM_BOT_TOKEN="your_bot_token_here"
    export TELEGRAM_CHAT_ID="your_chat_id_here"
    ```
 
-2. Optionally, configure the scheduling and failsafe parameters:
+3. Optionally, configure the scheduling and failsafe parameters:
    ```
    export CAPTURE_TIMES="10:00,14:00,18:00"  # Capture at 10am, 2pm, and 6pm
    export MAX_RETRIES="5"                    # Try up to 5 times if capture fails
    export RETRY_DELAY="10"                   # Wait 10 seconds between retries
    ```
 
-3. Run the script:
+4. Run the script:
    ```
    ./blumencam.py
    ```
 
    Or:
    ```
-   python3 blumencam.py
+   python blumencam.py
    ```
 
-4. The script will:
+5. The script will:
    - Capture and send an image immediately
    - Schedule captures at the specified times (default: 10am, 2pm, and 6pm)
    - Run continuously, checking the schedule every minute
    - Send error notifications to Telegram if any issues occur
    - Automatically retry camera capture if it fails
 
-5. To stop the script, press Ctrl+C
+6. To stop the script, press Ctrl+C
 
 ## Running at System Startup
 
@@ -148,9 +182,9 @@ Since the script now runs continuously with its own scheduling, you can set it t
    crontab -e
    ```
 
-2. Add a line to run the script at system boot:
+2. Add a line to run the script at system boot using the virtual environment:
    ```
-   @reboot cd /path/to/blumencam && TELEGRAM_BOT_TOKEN="your_token" TELEGRAM_CHAT_ID="your_chat_id" python3 blumencam.py >> /path/to/blumencam/blumencam.log 2>&1
+   @reboot cd /path/to/blumencam && TELEGRAM_BOT_TOKEN="your_token" TELEGRAM_CHAT_ID="your_chat_id" /path/to/blumencam/venv/bin/python blumencam.py >> /path/to/blumencam/blumencam.log 2>&1
    ```
 
 ### Using Systemd (Recommended)
@@ -169,7 +203,8 @@ Since the script now runs continuously with its own scheduling, you can set it t
    [Service]
    User=pi
    WorkingDirectory=/path/to/blumencam
-   ExecStart=/usr/bin/python3 /path/to/blumencam/blumencam.py
+   # Use the Python interpreter from the virtual environment
+   ExecStart=/path/to/blumencam/venv/bin/python /path/to/blumencam/blumencam.py
    Restart=always
    RestartSec=10
    Environment="TELEGRAM_BOT_TOKEN=your_token"

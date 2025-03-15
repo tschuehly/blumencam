@@ -25,6 +25,7 @@ import time
 import logging
 import schedule
 import sys
+import asyncio
 from datetime import datetime
 import telegram
 from telegram.ext import Updater
@@ -132,10 +133,10 @@ def send_error_to_telegram(error_message):
 
         # Send the error message
         message = f"⚠️ ERROR: {error_message}\nTime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-        bot.send_message(
+        asyncio.run(bot.send_message(
             chat_id=TELEGRAM_CHAT_ID,
             text=message
-        )
+        ))
 
         logger.info(f"Error message sent to Telegram chat {TELEGRAM_CHAT_ID}")
         return True
@@ -158,11 +159,11 @@ def send_to_telegram(image_path):
 
         # Send the photo
         with open(image_path, 'rb') as photo:
-            bot.send_photo(
+            asyncio.run(bot.send_photo(
                 chat_id=TELEGRAM_CHAT_ID,
                 photo=photo,
                 caption=f"Captured at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-            )
+            ))
 
         logger.info(f"Image sent to Telegram chat {TELEGRAM_CHAT_ID}")
         return True
