@@ -8,6 +8,7 @@ A Python application for Raspberry Pi that captures images from a webcam, saves 
 - Saves images to the local filesystem with timestamps
 - Sends images to a Telegram chat via a Telegram bot
 - Configurable through environment variables
+- Configurable camera resolution and exposure settings
 - Detailed logging
 - Failsafe mechanisms with retry logic
 - Error notifications via Telegram
@@ -91,6 +92,10 @@ You can configure the script using environment variables or by editing the scrip
 | `TELEGRAM_CHAT_ID` | Your Telegram chat ID | `YOUR_CHAT_ID_HERE` |
 | `IMAGE_DIR` | Directory to save images | `images` |
 | `CAMERA_DEVICE` | Camera device index | `0` |
+| `CAMERA_WIDTH` | Camera resolution width in pixels | `1280` |
+| `CAMERA_HEIGHT` | Camera resolution height in pixels | `720` |
+| `CAMERA_EXPOSURE` | Camera exposure setting (-1 for auto exposure) | `5` |
+| `CAMERA_BRIGHTNESS` | Camera brightness setting (0-100) | `50` |
 | `CAPTURE_TIMES` | Comma-separated list of times to capture images (24-hour format) | `10:00,14:00,18:00` |
 | `MAX_RETRIES` | Maximum number of retries for camera capture | `3` |
 | `RETRY_DELAY` | Seconds to wait between retries | `5` |
@@ -145,8 +150,12 @@ pip3 install python-dotenv
    export TELEGRAM_CHAT_ID="your_chat_id_here"
    ```
 
-3. Optionally, configure the scheduling and failsafe parameters:
+3. Optionally, configure the camera settings, scheduling, and failsafe parameters:
    ```
+   export CAMERA_WIDTH="1920"                # Set camera resolution width to 1920 pixels
+   export CAMERA_HEIGHT="1080"               # Set camera resolution height to 1080 pixels
+   export CAMERA_EXPOSURE="5"                # Lower exposure value for less bright images
+   export CAMERA_BRIGHTNESS="40"             # Lower brightness value (0-100) for less bright images
    export CAPTURE_TIMES="10:00,14:00,18:00"  # Capture at 10am, 2pm, and 6pm
    export MAX_RETRIES="5"                    # Try up to 5 times if capture fails
    export RETRY_DELAY="10"                   # Wait 10 seconds between retries
@@ -209,6 +218,10 @@ Since the script now runs continuously with its own scheduling, you can set it t
    RestartSec=10
    Environment="TELEGRAM_BOT_TOKEN=your_token"
    Environment="TELEGRAM_CHAT_ID=your_chat_id"
+   Environment="CAMERA_WIDTH=1280"
+   Environment="CAMERA_HEIGHT=720"
+   Environment="CAMERA_EXPOSURE=5"
+   Environment="CAMERA_BRIGHTNESS=40"
    # Add other environment variables as needed
 
    [Install]

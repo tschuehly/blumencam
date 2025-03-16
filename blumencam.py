@@ -52,6 +52,14 @@ TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', 'YOUR_BOT_TOKEN_HERE')
 TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID', 'YOUR_CHAT_ID_HERE')
 IMAGE_DIR = os.environ.get('IMAGE_DIR', 'images')
 CAMERA_DEVICE = int(os.environ.get('CAMERA_DEVICE', 0))  # Usually 0 for the first webcam
+# Camera resolution (default: 1280x720)
+CAMERA_WIDTH = int(os.environ.get('CAMERA_WIDTH', 1920))
+CAMERA_HEIGHT = int(os.environ.get('CAMERA_HEIGHT', 1080))
+# Camera exposure (default: -1, which means auto exposure)
+CAMERA_EXPOSURE = float(os.environ.get('CAMERA_EXPOSURE', 5))
+# Camera brightness (default: 50, range typically 0-100)
+CAMERA_BRIGHTNESS = int(os.environ.get('CAMERA_BRIGHTNESS', 50))
+CAMERA_FOCUS = int(os.environ.get('CAMERA_FOCUS', 100))
 
 # Scheduling configuration
 # Capture times (default: 10am, 2pm, and 6pm)
@@ -67,6 +75,16 @@ def setup_directories():
         os.makedirs(IMAGE_DIR)
         logger.info(f"Created directory: {IMAGE_DIR}")
 
+
+def set_manual_exposure(exposure_time):
+    commands = [
+        ("v4l2-ctl --device /dev/video0 -c auto_exposure=3"),
+        ("v4l2-ctl --device /dev/video0 -c auto_exposure=1"),
+        ("v4l2-ctl --device /dev/video0 -c exposure_time_absolute="+str(exposure_time))
+    ]
+    for c in commands:
+        os.system(c)
+
 def capture_image():
     """Capture an image from the webcam and save it to the filesystem with retry logic."""
     # Generate a filename with timestamp
@@ -79,10 +97,10 @@ def capture_image():
         try:
             # Initialize the webcam
             logger.info(f"Initializing webcam (device: {CAMERA_DEVICE})... Attempt {attempt}/{MAX_RETRIES}")
-            cap = cv2.VideoCapture(CAMERA_DEVICE)
+            camera = cv2.VideoCapture(CAMERA_DEVICE, cv2.CAP_V4L2)
 
             # Check if the webcam is opened correctly
-            if not cap.isOpened():
+            if not camera.isOpened():
                 error_msg = f"Failed to open webcam (Attempt {attempt}/{MAX_RETRIES})"
                 logger.error(error_msg)
                 if attempt == MAX_RETRIES:
@@ -91,14 +109,33 @@ def capture_image():
                 time.sleep(RETRY_DELAY)
                 continue
 
+            camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+            # Set camera resolution
+            camera.set(cv2.CAP_PROP_FRAME_WIDTH, CAMERA_WIDTH)
+            camera.set(cv2.CAP_PROP_FRAME_HEIGHT, CAMERA_HEIGHT)
+            logger.info(f"Setting camera resolution to {CAMERA_WIDTH}x{CAMERA_HEIGHT}")
+            actual_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
+            actual_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            logger.info(f"camera resolution is {actual_width}x{actual_height}")
+            if camera.set(cv2.CAP_PROP_AUTOFOCUS, 0):  # Disable autofocus
+                logger.info("Disabling autofocus")
+                camera.set(cv2.CAP_PROP_FOCUS, CAMERA_FOCUS)  # Example: Set manual focus
+
+
+            # usage
+            set_manual_exposure(CAMERA_EXPOSURE)
+            # Set camera brightness
+            camera.set(cv2.CAP_PROP_BRIGHTNESS, CAMERA_BRIGHTNESS)
+            logger.info(f"Setting camera brightness to {CAMERA_BRIGHTNESS}")
+
             # Allow the camera to warm up
             time.sleep(2)
 
             # Capture a frame
-            ret, frame = cap.read()
+            ret, frame = camera.read()
 
             # Release the webcam
-            cap.release()
+            camera.release()
 
             if not ret:
                 error_msg = f"Failed to capture image (Attempt {attempt}/{MAX_RETRIES})"
