@@ -24,3 +24,4 @@ images/
 
 # Environment variables
 .env
+/bilder/

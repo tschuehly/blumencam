@@ -244,6 +244,8 @@ Since the script now runs continuously with its own scheduling, you can set it t
    sudo journalctl -u blumencam.service
    ```
 
+
+
 ## Troubleshooting
 
 - **Camera not detected**: Make sure your webcam is properly connected and recognized by the system. You can check available cameras with `ls /dev/video*`.
