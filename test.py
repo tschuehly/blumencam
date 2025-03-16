@@ -1,21 +1,19 @@
-import imageio as iio
+from datetime import datetime
+
+import imageio.v3 as iio
 
 from blumencam import logger
-camera_settings = {
-  "input": "/dev/video0",
-  "format": "v4l2",
-  "framerate": "30",
-  "video_size": "1920x1080",  # Set resolution
-  "input_format": "mjpeg",  # Use MJPG pixel format
-}
 
 try:
+  webcam = iio.imopen("<video0>", "r")
+  # Read the next frame
+  frame = webcam.read()
+
+  timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
   # Initialize camera (typically 0 for the default device)
-  camera = iio.get_reader("<video0>", **camera_settings)
-  screenshot = camera.get_data(0)
-  filename = f"/home/tschuehly/blumenbilder/test.jpg"
-  iio.imwrite(filename, screenshot)
+  filename = f"/home/tschuehly/blumenbilder/test_{timestamp}.jpg"
+  iio.imwrite(filename, frame)
   logger.info(f"Screenshot saved to {filename}")
-    # Capture a single frame
+  # Capture a single frame
 finally:
-  camera.close()
+  webcam.close()
